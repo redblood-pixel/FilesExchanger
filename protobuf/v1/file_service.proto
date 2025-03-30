@@ -1,0 +1,14 @@
+syntax = "proto3";
+package github.redbloodpixel.files_exchange.fileservice.v1;
+
+import "google.protobuf.empty.proto";
+import "v1/model.proto";
+
+// TODO add options go_package
+
+service FileService {
+
+    rpc UploadFile(UploadFileRequest) returns (UploadFileResponse){}
+    rpc ListFiles(google.protobuf.Empty) returns (ListFilesResponse){}
+    rpc DownloadFile(DownloadFileRequest) returns (DownloadFileResponse){}
+}

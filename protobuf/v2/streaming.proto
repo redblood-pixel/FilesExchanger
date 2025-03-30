@@ -1,0 +1,32 @@
+syntax = "proto3";
+package github.redbloodpixel.filesexchanger.fileservice.v2;
+
+import "v2/model.proto";
+
+message FileChunk {
+    FileContent content = 1;
+}
+
+message UploadFileStreamRequest {
+  oneof data {
+    github.redbloodpixel.FileMetadata metadata = 1;
+    FileChunk chunk = 2;
+  }
+}
+
+message UploadFileResponse {
+    string status = 1;
+    int32 size = 2;
+}
+
+message ListFilesResponse {
+    repeated FileMetadata files = 1;
+}
+
+message LoadFileRequest {
+    string filename = 1;
+}
+
+message LoadFileResponse {
+    FileContent content = 1;
+}

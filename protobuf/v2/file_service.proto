@@ -1,0 +1,17 @@
+syntax = "proto3";
+package github.redbloodpixel.filesexchange.fileservice.v2;
+
+import "google.protobuf.empty.proto";
+import "v2/model.proto";
+import "v2/streaming.proto";
+
+service FileService {
+
+    rpc UploadFile(UploadFileRequest) returns (UploadFileResponse){}
+    rpc ListFiles(google.protobuf.Empty) returns (ListFilesResponse){}
+    rpc DownloadFile(DownloadFileRequest) returns (DownloadFileResponse){}
+    
+    
+    rpc UploadFileStream(stream UploadFileStreamRequest) returns (UploadFileResponse);
+    rpc DownloadFileStream(DownloadFileRequest) returns (stream FileChunk);
+}

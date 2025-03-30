@@ -1,0 +1,2 @@
+syntax = "proto3";
+package github.redbloodpixel.filesexchange.fileservice.v3;
