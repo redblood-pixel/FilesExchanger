@@ -1,5 +1,5 @@
 syntax = "proto3";
-package github.redbloodpixel.filesexchanger.fileservice.v2;
+package github.redbloodpixel.filesexchange.fileservice.v2;
 
 import "v2/model.proto";
 

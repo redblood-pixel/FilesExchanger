@@ -1,8 +1,10 @@
 syntax = "proto3";
-package github.redbloodpixel.files_exchange.fileservice.v1;
+package github.redbloodpixel.filesexchange.fileservice.v1;
 
-import "google.protobuf.empty.proto";
-import "v1/model.proto";
+option go_package = "github.com/redblood-pixel/FilesExchanger/gen/v1;fsv1";
+
+import "google/protobuf/empty.proto";
+import "model.proto";
 
 // TODO add options go_package
 

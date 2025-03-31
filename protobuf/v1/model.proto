@@ -1,6 +1,9 @@
 syntax = "proto3";
 package github.redbloodpixel.filesexchange.fileservice.v1;
 
+option go_package = "github.com/redblood-pixel/FilesExchanger/gen/v1;fsv1";
+
+import "google/protobuf/timestamp.proto";
 
 message FileContent {
     bytes data = 1;
