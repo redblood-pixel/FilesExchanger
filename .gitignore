@@ -1,1 +1,4 @@
 files/
+db_init
+app
+file_storage.db
