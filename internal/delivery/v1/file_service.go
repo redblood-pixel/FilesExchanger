@@ -3,19 +3,59 @@ package v1
 import (
 	"context"
 	"log"
+	"time"
 
 	fsv1 "github.com/redblood-pixel/FilesExchanger/gen/v1"
 	"github.com/redblood-pixel/FilesExchanger/internal/domain"
 	"github.com/redblood-pixel/FilesExchanger/internal/service"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// TODO better status codes
-// TODO filename validation
-// TODO regen proto
+// TODO better status codes & error handling
+// TODO hash file name and search by it
+
+type rateLimiter struct {
+	updateDownloadLimit chan struct{}
+	listFilesLimit      chan struct{}
+}
+
+func NewRateLimiter() *rateLimiter {
+	return &rateLimiter{
+		updateDownloadLimit: make(chan struct{}, 10),
+		listFilesLimit:      make(chan struct{}, 100),
+	}
+}
+
+func (r *rateLimiter) LimiterInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
+
+	var limitChan chan struct{}
+	switch info.FullMethod {
+	case "/github.redbloodpixel.filesexchange.fileservice.v1.FileService/ListFiles":
+		limitChan = r.listFilesLimit
+	default:
+		limitChan = r.updateDownloadLimit
+	}
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second) // important - ctx as parent context
+	defer cancel()
+
+	select {
+	case limitChan <- struct{}{}:
+		defer func() { <-limitChan }()
+		return handler(ctx, req)
+	case <-waitCtx.Done():
+		return nil, status.Error(codes.ResourceExhausted, "timeout reached")
+	}
+}
 
 type FileGRPCHandler struct {
 	fsv1.UnimplementedFileServiceServer
@@ -66,19 +106,17 @@ func (s *FileGRPCHandler) UploadFile(
 	if in == nil {
 		log.Println("empty in")
 		return &fsv1.UploadFileResponse{}, status.Error(codes.InvalidArgument, "message is empty")
-	} else if in.File == nil || in.Content == nil || len(in.Content.Data) == 0 {
+	} else if in.Content == nil || len(in.Content.Data) == 0 {
 		log.Println("empty in.File")
 		return &fsv1.UploadFileResponse{}, status.Error(codes.InvalidArgument, "file info or content is empty")
 	}
 	file := domain.File{
-		Name:      in.File.Filename,
-		CreatedAt: in.File.CreatedAt.AsTime(),
-		UpdatedAt: in.File.UpdatedAt.AsTime(),
-		Content:   in.Content.Data,
+		Name:    in.Filename,
+		Content: in.Content.Data,
 	}
 	n, err := s.svc.Files.UploadFile(ctx, file)
 	if err != nil {
 		return &fsv1.UploadFileResponse{}, status.Error(codes.Aborted, err.Error())
 	}
-	return &fsv1.UploadFileResponse{Status: "ok", Size: int32(n)}, status.Error(codes.OK, "")
+	return &fsv1.UploadFileResponse{Size: int32(n)}, nil
 }

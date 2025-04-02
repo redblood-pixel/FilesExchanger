@@ -24,7 +24,11 @@ func Run() {
 		log.Fatal("listen error")
 	}
 
-	grpcServer := grpc.NewServer()
+	limiter := v1.NewRateLimiter()
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(limiter.LimiterInterceptor),
+	)
 	fsv1.RegisterFileServiceServer(grpcServer, handler)
 
 	go func() {

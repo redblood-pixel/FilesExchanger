@@ -128,8 +128,8 @@ func (x *FileMetadata) GetUpdatedAt() *timestamppb.Timestamp {
 
 type UploadFileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	File          *FileMetadata          `protobuf:"bytes,1,opt,name=file,proto3" json:"file,omitempty"`
 	Content       *FileContent           `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -164,13 +164,6 @@ func (*UploadFileRequest) Descriptor() ([]byte, []int) {
 	return file_model_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UploadFileRequest) GetFile() *FileMetadata {
-	if x != nil {
-		return x.File
-	}
-	return nil
-}
-
 func (x *UploadFileRequest) GetContent() *FileContent {
 	if x != nil {
 		return x.Content
@@ -178,9 +171,15 @@ func (x *UploadFileRequest) GetContent() *FileContent {
 	return nil
 }
 
+func (x *UploadFileRequest) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
 type UploadFileResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
 	Size          int32                  `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -214,13 +213,6 @@ func (x *UploadFileResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UploadFileResponse.ProtoReflect.Descriptor instead.
 func (*UploadFileResponse) Descriptor() ([]byte, []int) {
 	return file_model_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *UploadFileResponse) GetStatus() string {
-	if x != nil {
-		return x.Status
-	}
-	return ""
 }
 
 func (x *UploadFileResponse) GetSize() int32 {
@@ -374,13 +366,12 @@ const file_model_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xc2\x01\n" +
-	"\x11UploadFileRequest\x12S\n" +
-	"\x04file\x18\x01 \x01(\v2?.github.redbloodpixel.filesexchange.fileservice.v1.FileMetadataR\x04file\x12X\n" +
-	"\acontent\x18\x02 \x01(\v2>.github.redbloodpixel.filesexchange.fileservice.v1.FileContentR\acontent\"@\n" +
-	"\x12UploadFileResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\x12\x12\n" +
-	"\x04size\x18\x02 \x01(\x05R\x04size\"j\n" +
+	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8f\x01\n" +
+	"\x11UploadFileRequest\x12X\n" +
+	"\acontent\x18\x02 \x01(\v2>.github.redbloodpixel.filesexchange.fileservice.v1.FileContentR\acontent\x12\x1a\n" +
+	"\bfilename\x18\x03 \x01(\tR\bfilenameJ\x04\b\x01\x10\x02\".\n" +
+	"\x12UploadFileResponse\x12\x12\n" +
+	"\x04size\x18\x02 \x01(\x05R\x04sizeJ\x04\b\x01\x10\x02\"j\n" +
 	"\x11ListFilesResponse\x12U\n" +
 	"\x05files\x18\x01 \x03(\v2?.github.redbloodpixel.filesexchange.fileservice.v1.FileMetadataR\x05files\"1\n" +
 	"\x13DownloadFileRequest\x12\x1a\n" +
@@ -414,15 +405,14 @@ var file_model_proto_goTypes = []any{
 var file_model_proto_depIdxs = []int32{
 	7, // 0: github.redbloodpixel.filesexchange.fileservice.v1.FileMetadata.created_at:type_name -> google.protobuf.Timestamp
 	7, // 1: github.redbloodpixel.filesexchange.fileservice.v1.FileMetadata.updated_at:type_name -> google.protobuf.Timestamp
-	1, // 2: github.redbloodpixel.filesexchange.fileservice.v1.UploadFileRequest.file:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileMetadata
-	0, // 3: github.redbloodpixel.filesexchange.fileservice.v1.UploadFileRequest.content:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileContent
-	1, // 4: github.redbloodpixel.filesexchange.fileservice.v1.ListFilesResponse.files:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileMetadata
-	0, // 5: github.redbloodpixel.filesexchange.fileservice.v1.DownloadFileResponse.content:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileContent
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	0, // 2: github.redbloodpixel.filesexchange.fileservice.v1.UploadFileRequest.content:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileContent
+	1, // 3: github.redbloodpixel.filesexchange.fileservice.v1.ListFilesResponse.files:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileMetadata
+	0, // 4: github.redbloodpixel.filesexchange.fileservice.v1.DownloadFileResponse.content:type_name -> github.redbloodpixel.filesexchange.fileservice.v1.FileContent
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_model_proto_init() }

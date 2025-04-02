@@ -16,12 +16,13 @@ message FileMetadata {
 }
 
 message UploadFileRequest {
-    FileMetadata file = 1;
+    reserved 1;
     FileContent content = 2;
+    string filename = 3;
 }
 
 message UploadFileResponse {
-    string status = 1;
+    reserved 1;
     int32 size = 2;
 }
 
