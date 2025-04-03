@@ -2,77 +2,79 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"log"
 	"os"
 	"path/filepath"
-	"slices"
-	"strings"
-	"unicode"
+	"unicode/utf8"
 
 	"github.com/redblood-pixel/FilesExchanger/internal/domain"
-
-	"github.com/djherbis/times"
+	"github.com/redblood-pixel/FilesExchanger/internal/repository"
+	"github.com/redblood-pixel/FilesExchanger/pkg/fileutil"
 )
 
 type FileService struct {
-	path string
+	path     string
+	fileRepo repository.File
+	db       *sql.DB
 }
 
-func NewFileService(path string) *FileService {
-	return &FileService{path: path}
+func NewFileService(path string, fileRepo repository.File, db *sql.DB) *FileService {
+	return &FileService{path: path, fileRepo: fileRepo, db: db}
 }
-
-var types = []string{".jpg", ".png", ".jpeg"}
 
 func (s *FileService) UploadFile(ctx context.Context, file domain.File) (int, error) {
-	if c := strings.ContainsFunc(file.Name, func(r rune) bool {
-		return !unicode.IsDigit(r) && !unicode.IsLetter(r) && r != '.' && r != '_'
-	}); c {
-		return 0, errFileInvalidName
+
+	if err := fileutil.Validate(file.Name); err != nil {
+		return 0, errFileBadName
 	}
-	ext := filepath.Ext(file.Name)
-	if pos := slices.Index(types, ext); pos == -1 {
-		return 0, errFileInvalidType
+	hashName := fileutil.HashFilename(file.Name)
+
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{
+		Isolation: sql.IsolationLevel(0),
+		ReadOnly:  false,
+	})
+	if err != nil {
+		return 0, errInternalServer
+	}
+	defer tx.Rollback()
+
+	log.Println(file.Name, hashName, utf8.RuneCountInString(hashName))
+	err = s.fileRepo.CreateOrUpdate(ctx, tx, file.Name, hashName)
+	if err != nil {
+		log.Println("fileservice, createorupdate", err.Error())
+		return 0, errInternalServer
 	}
 
-	newPath := filepath.Join(s.path, file.Name)
-	newFile, err := os.Create(newPath)
+	newFile, err := os.Create(filepath.Join(s.path, hashName))
 	if err != nil {
-		return 0, errFileExists
+		return 0, errInternalServer
 	}
 	n, err := newFile.Write(file.Content)
 	if err != nil {
-		return 0, fmt.Errorf("error while writing %w", err)
+		return 0, errInternalServer
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, errInternalServer
 	}
 	return n, nil
 }
 
-func (s *FileService) ListFiles(ctx context.Context) ([]*domain.File, error) {
-	files, err := os.ReadDir(s.path)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]*domain.File, len(files))
-	for i, file := range files {
-		t, err := times.Stat(filepath.Join(s.path, file.Name()))
-		if err != nil {
-			return nil, err
-		}
-		res[i] = &domain.File{
-			Name:      file.Name(),
-			CreatedAt: t.BirthTime(),
-			UpdatedAt: t.ModTime(),
-		}
-	}
-	return res, nil
+func (s *FileService) ListFiles(ctx context.Context) ([]domain.File, error) {
+	return s.fileRepo.GetAll(ctx)
 }
 
 func (s *FileService) DownloadFile(ctx context.Context, filename string) ([]byte, error) {
 
 	// for streaming we should use file.Read with buffer of size, for example, 4 Kb
-	data, err := os.ReadFile(filepath.Join(s.path, filename))
+	hashName, err := s.fileRepo.GetName(ctx, filename)
 	if err != nil {
+		log.Println("getname", err.Error())
+		return nil, errFileNotFound
+	}
+	data, err := os.ReadFile(filepath.Join(s.path, hashName))
+	if err != nil {
+		log.Println("findName", err.Error())
 		return nil, errFileNotFound
 	}
 	return data, nil

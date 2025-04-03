@@ -9,7 +9,9 @@ import (
 
 	fsv1 "github.com/redblood-pixel/FilesExchanger/gen/v1"
 	v1 "github.com/redblood-pixel/FilesExchanger/internal/delivery/v1"
+	"github.com/redblood-pixel/FilesExchanger/internal/repository"
 	"github.com/redblood-pixel/FilesExchanger/internal/service"
+	"github.com/redblood-pixel/FilesExchanger/pkg/sqlite"
 	"google.golang.org/grpc"
 )
 
@@ -17,7 +19,13 @@ var path = "files/"
 
 func Run() {
 
-	svc := service.NewService(path)
+	db, err := sqlite.Connect()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	repo := repository.NewRepository(db)
+	svc := service.NewService(path, repo, db)
 	handler := v1.NewFileGRPCHandler(svc)
 	lis, err := net.Listen("tcp", ":5051")
 	if err != nil {
