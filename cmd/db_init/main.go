@@ -10,17 +10,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// TODO create good db
-
 func main() {
-	// Открываем соединение (файл БД создастся автоматически)
 	db, err := sql.Open("sqlite3", "./file_storage.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Создаём таблицу для хранения информации о файлах
 	createTableSQL := `
     CREATE TABLE IF NOT EXISTS files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
